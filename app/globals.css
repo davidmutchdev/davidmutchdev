@@ -1,26 +1,173 @@
 @import "tailwindcss";
 
+/* Dark palette: near-black ink, layered translucent surfaces, one teal accent (from the résumé)
+   with indigo used only in background light. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #06070b;
+  --bg-2: #0c0e14;
+  --fg: #f2f4f8;
+  --fg-2: #c3c9d4;
+  --muted: #8a93a3;
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.14);
+  --accent: #5eead4;
+  --accent-2: #818cf8;
+  --accent-soft: rgb(94 234 212 / 0.1);
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-soft: var(--accent-soft);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Headings: white that softens slightly toward the bottom. */
+@utility text-heading {
+  background-image: linear-gradient(180deg, #fff 0%, rgb(255 255 255 / 0.72) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Accent words in headings. */
+@utility text-accent-gradient {
+  background-image: linear-gradient(90deg, var(--accent) 0%, #7dd3fc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+  scrollbar-color: #23272f transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+}
+
+::selection {
+  background: rgb(94 234 212 / 0.3);
+  color: #fff;
+}
+
+/* Fine grid behind the hero, fading out from the top. */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 70% 55% at 50% 0%, #000 20%, transparent 100%);
+}
+
+/* Thin bar that fills as the page scrolls (scroll-driven animation, no JS). */
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 60;
+  height: 2px;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+@supports (animation-timeline: scroll()) {
+  .scroll-progress {
+    animation: progress linear both;
+    animation-timeline: scroll(root);
+  }
+}
+
+@layer components {
+  /* Cursor spotlight on cards: a faint fill and a brighter border near the pointer.
+     SpotlightTracker sets --mx and --my. */
+  [data-spotlight] {
+    position: relative;
+    isolation: isolate;
+  }
+
+  [data-spotlight]::before,
+  [data-spotlight]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  [data-spotlight]::before {
+    z-index: -1;
+    background: radial-gradient(22rem circle at var(--mx, 50%) var(--my, 0%), rgb(94 234 212 / 0.07), transparent 60%);
+  }
+
+  [data-spotlight]::after {
+    padding: 1px;
+    background: radial-gradient(14rem circle at var(--mx, 50%) var(--my, 0%), rgb(94 234 212 / 0.55), transparent 70%);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+
+  [data-spotlight]:hover::before,
+  [data-spotlight]:hover::after {
+    opacity: 1;
+  }
+}
+
+/* Motion, only for visitors who haven't asked for less. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Scroll reveal. Content stays visible without JS (the `js` class is set in layout.tsx). */
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  .js [data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@keyframes progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media print {
+  header,
+  .no-print,
+  .scroll-progress {
+    display: none !important;
+  }
 }
